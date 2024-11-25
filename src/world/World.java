@@ -36,14 +36,13 @@ public final class World {
     }
 
     /**
-     * Adds an entity to the world.
+     * Adds an entity (Node) to the world.
      *
-     * @param entity the entity to add
+     * @param entity The entity to add.
      */
     public void addEntity(final javafx.scene.Node entity) {
-        root.getChildren().add(entity);
+        this.getRoot().getChildren().add(entity);
     }
-
     /**
      * Gets the root Pane of the world.
      *

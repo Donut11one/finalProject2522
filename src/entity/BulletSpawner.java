@@ -63,6 +63,7 @@ public final class BulletSpawner {
                     final Bullet bullet = new Bullet(centerX, centerY, speed, Math.toRadians(angle), lifetime);
                     bullet.addToPane(world);
                     activeBullets.add(bullet);
+                    root.getChildren().add(bullet);
 
                     angle += angleStep; // Increment the angle for the next bullet
                 }
