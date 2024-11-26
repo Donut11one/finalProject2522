@@ -1,91 +1,101 @@
 package entity;
 
-import javafx.animation.AnimationTimer;
 import javafx.scene.layout.Pane;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
- * Spawns bullets in various patterns over a specified duration.
+ * Spawns and manages bullets in the game world.
  */
-public final class BulletSpawner {
+public class BulletSpawner {
 
-    private final List<Bullet> activeBullets = new ArrayList<>();
-    private boolean isSpawning = false; // Indicates whether the spawner is active
+    private final List<Bullet> bullets; // List to store bullets
+    private double timeSinceLastSpawn; // Timer to track the spawn rate
+    private final double spawnInterval; // Interval between bullet spawns
 
     /**
-     * Starts spawning bullets in a spiral pattern for a specified duration.
+     * Initializes a bullet spawner.
      *
-     * @param world        The Pane to spawn bullets in.
-     * @param centerX      The X coordinate of the spawn center.
-     * @param centerY      The Y coordinate of the spawn center.
-     * @param speed        The speed of the bullets.
-     * @param lifetime     The lifetime of the bullets in seconds.
-     * @param angleStep    The angular increment between bullets in degrees.
-     * @param spawnRate    The rate at which bullets are spawned (bullets per second).
-     * @param spawnDuration The total duration to spawn bullets in seconds.
+     * @param spawnInterval The time interval (in seconds) between bullet spawns.
      */
-    public void spawnSpiralWithDuration(final Pane world, final double centerX, final double centerY,
-                                        final double speed, final double lifetime, final double angleStep,
-                                        final double spawnRate, final double spawnDuration) {
-        if (isSpawning) {
-            return; // Prevent multiple spawners from running simultaneously
-        }
-
-        isSpawning = true;
-
-
-       
-
-        AnimationTimer timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                long startTime = System.nanoTime();
-                long lastSpawnTime = System.nanoTime();
-                double angle = 0; // Initial angle for the spiral pattern
-
-                double elapsedTime = (now - startTime) / 1e9; // Convert nanoseconds to seconds
-
-                // Stop spawning after the duration has passed
-                if (elapsedTime > spawnDuration) {
-                    isSpawning = false;
-                    this.stop();
-                    return;
-                }
-
-                // Spawn bullets periodically based on the spawnRate
-                double timeSinceLastSpawn = (now - lastSpawnTime) / 1e9;
-                if (timeSinceLastSpawn >= 1.0 / spawnRate) {
-                    lastSpawnTime = now;
-
-                    // Spawn bullets in a spiral pattern
-                    final Bullet bullet = new Bullet(centerX, centerY, speed, Math.toRadians(angle), lifetime);
-                    bullet.addToPane(world);
-                    activeBullets.add(bullet);
-                    root.getChildren().add(bullet);
-
-                    angle += angleStep; // Increment the angle for the next bullet
-                }
-            }
-        };
-
-        timer.start();
+    public BulletSpawner(double spawnInterval) {
+        this.bullets = new ArrayList<>();
+        this.timeSinceLastSpawn = 0;
+        this.spawnInterval = spawnInterval;
     }
 
     /**
-     * Updates all active bullets.
+     * Updates the bullet spawner. Handles spawning and bullet movement.
      *
-     * @param deltaTime Time elapsed since the last update.
-     * @param world     The Pane containing the bullets.
+     * @param deltaTime The time elapsed since the last update (in seconds).
+     * @param worldRoot The root pane of the game world.
      */
-    public void update(final double deltaTime, final Pane world) {
-        activeBullets.removeIf(bullet -> {
-            if (!bullet.update(deltaTime)) {
-                bullet.removeFromPane(world);
-                return true; // Remove expired bullets
+    public void update(double deltaTime, Pane worldRoot) {
+        // Increment time since the last spawn
+        timeSinceLastSpawn += deltaTime;
+    
+        // Spawn bullets if the spawn interval has been reached
+        if (timeSinceLastSpawn >= spawnInterval) {
+            spawnSpiral(worldRoot, worldRoot.getWidth() / 2, worldRoot.getHeight() / 2, 150, 5, 10, 5, 16, 360.0 / 16);
+            timeSinceLastSpawn = 0; // Reset the spawn timer
+        }
+    
+        // Update each bullet
+        Iterator<Bullet> iterator = bullets.iterator();
+        while (iterator.hasNext()) {
+            Bullet bullet = iterator.next();
+            bullet.move(deltaTime); // Move the bullet
+    
+            // Remove expired bullets
+            if (bullet.hasExpired()) {
+                worldRoot.getChildren().remove(bullet.getShape());
+                iterator.remove();
             }
-            return false;
-        });
+        }
+    }
+    
+
+    /**
+     * Spawns bullets in a spiral pattern.
+     *
+     * @param worldRoot    The root pane of the game world.
+     * @param centerX      The X coordinate of the spiral's center.
+     * @param centerY      The Y coordinate of the spiral's center.
+     * @param speed        The speed of the bullets.
+     * @param bulletSize   The size (radius) of the bullets.
+     * @param bulletDamage The damage value of the bullets.
+     * @param duration     The duration the bullets remain active (in seconds).
+     * @param bulletCount  The number of bullets to spawn in the spiral.
+     * @param angleStep    The angle step for bullet placement in degrees.
+     */
+    public void spawnSpiral(
+            Pane worldRoot,
+            double centerX,
+            double centerY,
+            double speed,
+            int bulletSize,
+            int bulletDamage,
+            double duration,
+            int bulletCount,
+            double angleStep
+    ) {
+        for (int i = 0; i < bulletCount; i++) {
+            double angle = Math.toRadians(i * angleStep); // Convert angle to radians
+            double bulletX = centerX + Math.cos(angle) * 20; // Starting X position
+            double bulletY = centerY + Math.sin(angle) * 20; // Starting Y position
+
+            // Calculate bullet's velocity components
+            double speedX = speed * Math.cos(angle);
+            double speedY = speed * Math.sin(angle);
+
+            // Create a new bullet
+            Bullet bullet = new Bullet(bulletX, bulletY, speedX, speedY, bulletSize, bulletDamage, duration);
+
+            // Add the bullet to the world and the list
+            worldRoot.getChildren().add(bullet.getShape());
+            bullets.add(bullet);
+        }
     }
 }

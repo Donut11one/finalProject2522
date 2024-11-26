@@ -3,70 +3,66 @@ package world;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.Node;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Represents the game world with a visible border.
+ * Represents the world where entities, including the player, bullets, etc., exist.
  */
 public final class World {
 
+    private final List<Node> entities = new ArrayList<>();
     private final Pane root;
-    private final int width;
-    private final int height;
-    private final Rectangle border;
+    private final Rectangle worldBorder;
 
-    /**
-     * Creates a new World with the given dimensions and a visible border.
-     *
-     * @param width  the width of the world
-     * @param height the height of the world
-     */
     public World(final int width, final int height) {
-        this.width = width;
-        this.height = height;
-        this.root = new Pane();
+        root = new Pane();
+        root.setPrefSize(width, height);
 
-        // Create a visible border
-        this.border = new Rectangle(0, 0, width, height);
-        border.setStroke(Color.BLACK); // Border color
-        border.setStrokeWidth(3);      // Border thickness
-        border.setFill(null);          // Transparent fill
+        // Create a world border (a rectangle around the world)
+        worldBorder = new Rectangle(0, 0, width, height);
+        worldBorder.setStroke(Color.BLACK); // Border color
+        worldBorder.setFill(Color.TRANSPARENT); // No fill, just a border
+        worldBorder.setStrokeWidth(3); // Set the border thickness
 
-        // Add the border to the root
-        root.getChildren().add(border);
+        // Add the world border to the root Pane
+        root.getChildren().add(worldBorder);
     }
 
     /**
-     * Adds an entity (Node) to the world.
+     * Adds a Node (e.g., bullet or player) to the world.
      *
-     * @param entity The entity to add.
+     * @param entity The entity to be added.
      */
-    public void addEntity(final javafx.scene.Node entity) {
-        this.getRoot().getChildren().add(entity);
+    public void addEntity(Node entity) {
+        entities.add(entity);
+        root.getChildren().add(entity);
     }
+
     /**
-     * Gets the root Pane of the world.
+     * Removes a Node (e.g., bullet or player) from the world.
      *
-     * @return the root Pane
+     * @param entity The entity to be removed.
+     */
+    public void removeEntity(Node entity) {
+        entities.remove(entity);
+        root.getChildren().remove(entity);
+    }
+
+    /**
+     * Gets the root of the world (Pane).
+     *
+     * @return The root Pane of the world.
      */
     public Pane getRoot() {
         return root;
     }
 
     /**
-     * Gets the width of the world.
-     *
-     * @return the width of the world
+     * Updates the world, can be used to update all entities.
      */
-    public int getWidth() {
-        return width;
-    }
-
-    /**
-     * Gets the height of the world.
-     *
-     * @return the height of the world
-     */
-    public int getHeight() {
-        return height;
+    public void update() {
+        // Here you can update all entities (e.g., player, bullets)
     }
 }

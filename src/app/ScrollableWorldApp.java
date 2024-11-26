@@ -9,6 +9,9 @@ import javafx.stage.Stage;
 import player.Player;
 import world.World;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Main application entry point for the Scrollable World App.
  */
@@ -35,36 +38,32 @@ public final class ScrollableWorldApp extends Application {
         final Scene scene = new Scene(camera, windowWidth, windowHeight);
         player.enableControls(scene, worldWidth, worldHeight, camera);
 
-        // Initialize BulletSpawner
-        final BulletSpawner bulletSpawner = new BulletSpawner();
+        // List of bullet spawners
+        final List<BulletSpawner> bulletSpawners = new ArrayList<>();
 
-        // Spawn a spiral of bullets at the center of the world
-        bulletSpawner.spawnSpiralWithDuration(
-            world.getRoot(),
-            worldWidth / 2.0,
-            worldHeight / 2.0,
-            100,  // Speed
-            5,    // Lifetime
-            20,   // Angle step
-            10,   // Spawn rate
-            10    // Duration
-        );
+        // Add multiple bullet spawners
+        BulletSpawner spawner1 = new BulletSpawner(1.0);
+        BulletSpawner spawner2 = new BulletSpawner(0.5);
+        bulletSpawners.add(spawner1);
+        bulletSpawners.add(spawner2);
 
-        // Animation loop for updating bullet spawner
+        // Set up the spawners at different locations in the world
+        spawner1.spawnSpiral(world.getRoot(), worldWidth / 2.0, 0, 1000, 5, 10, 5,1,30);
+
+        // Animation loop
         new AnimationTimer() {
-            private long lastTime = System.nanoTime();
+            long lastTime = System.nanoTime();
 
             @Override
             public void handle(long now) {
-                double deltaTime = (now - lastTime) / 1e9; // Convert nanoseconds to seconds
+                double deltaTime = (now - lastTime) / 1e9; // Calculate delta time in seconds
                 lastTime = now;
 
-                // Update bullets
-                bulletSpawner.update(deltaTime, world.getRoot());
+                spawner1.update(deltaTime, world.getRoot());
+                spawner2.update(deltaTime, world.getRoot());
             }
         }.start();
 
-        world.addEntity(bulletSpawner);
         // Set up the primary stage
         primaryStage.setTitle("Scrollable World App");
         primaryStage.setScene(scene);

@@ -2,77 +2,68 @@ package entity;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.layout.Pane;
 
 /**
- * Represents a bullet in the game world.
+ * Represents a bullet that is fired in the game.
  */
-public final class Bullet {
+public class Bullet {
 
-    private static final double DEFAULT_BULLET_RADIUS = 5.0;
-
-    private final Circle bullet;
-    private final double speed;
-    private final double direction; // Angle in radians
-    private final double lifetime; // Bullet lifetime in seconds
-    private double elapsedTime; // Tracks how long the bullet has existed
+    private final Circle shape;
+    private final double speedX;
+    private final double speedY;
+    private final double duration; // Duration the bullet is active (in seconds)
+    private double age; // Time elapsed since the bullet was created (in seconds)
 
     /**
-     * Initializes a bullet with the specified properties.
+     * Creates a new bullet.
      *
-     * @param startX     The starting X position.
-     * @param startY     The starting Y position.
-     * @param speed      The speed of the bullet.
-     * @param direction  The direction (angle in radians) the bullet moves.
-     * @param lifetime   The lifetime of the bullet in seconds.
+     * @param x        Initial X position of the bullet.
+     * @param y        Initial Y position of the bullet.
+     * @param speedX   Horizontal velocity of the bullet.
+     * @param speedY   Vertical velocity of the bullet.
+     * @param radius   Radius of the bullet.
+     * @param damage   Damage the bullet deals.
+     * @param duration Lifetime of the bullet in seconds.
      */
-    public Bullet(final double startX, final double startY, final double speed, final double direction, final double lifetime) {
-        this.bullet = new Circle(DEFAULT_BULLET_RADIUS, Color.RED);
-        this.bullet.setCenterX(startX);
-        this.bullet.setCenterY(startY);
-        this.speed = speed;
-        this.direction = direction;
-        this.lifetime = lifetime;
-        this.elapsedTime = 0;
+    public Bullet(double x, double y, double speedX, double speedY, int radius, int damage, double duration) {
+        this.shape = new Circle(radius, Color.RED);
+        this.shape.setCenterX(x);
+        this.shape.setCenterY(y);
+        this.speedX = speedX;
+        this.speedY = speedY;
+        this.duration = duration;
+        this.age = 0; // Initialize bullet age to 0
     }
 
     /**
-     * Updates the bullet's position and lifetime.
+     * Moves the bullet based on its velocity.
      *
-     * @param deltaTime  Time elapsed since the last update.
-     * @return True if the bullet is still active, false if it has expired.
+     * @param deltaTime Time elapsed since the last update (in seconds).
      */
-    public boolean update(final double deltaTime) {
-        this.elapsedTime += deltaTime;
+    public void move(double deltaTime) {
+        // Update the bullet's position
+        this.shape.setCenterX(this.shape.getCenterX() + speedX * deltaTime);
+        this.shape.setCenterY(this.shape.getCenterY() + speedY * deltaTime);
 
-        if (this.elapsedTime > this.lifetime) {
-            return false; // Bullet has expired
-        }
-
-        final double dx = Math.cos(this.direction) * this.speed * deltaTime;
-        final double dy = Math.sin(this.direction) * this.speed * deltaTime;
-
-        this.bullet.setCenterX(this.bullet.getCenterX() + dx);
-        this.bullet.setCenterY(this.bullet.getCenterY() + dy);
-
-        return true; // Bullet is still active
+        // Update the bullet's age
+        age += deltaTime;
     }
 
     /**
-     * Adds the bullet to a given Pane.
+     * Checks if the bullet has expired based on its duration.
      *
-     * @param world The Pane to add the bullet to.
+     * @return True if the bullet's lifetime has exceeded its duration, false otherwise.
      */
-    public void addToPane(final Pane world) {
-        world.getChildren().add(this.bullet);
+    public boolean hasExpired() {
+        return age >= duration;
     }
 
     /**
-     * Removes the bullet from a given Pane.
+     * Gets the visual representation of the bullet.
      *
-     * @param world The Pane to remove the bullet from.
+     * @return The Circle representing the bullet.
      */
-    public void removeFromPane(final Pane world) {
-        world.getChildren().remove(this.bullet);
+    public Circle getShape() {
+        return this.shape;
     }
 }
