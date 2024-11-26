@@ -1,16 +1,13 @@
 package app;
 
 import entity.BulletSpawner;
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import player.Player;
 import world.World;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Main application entry point for the Scrollable World App.
@@ -38,29 +35,26 @@ public final class ScrollableWorldApp extends Application {
         final Scene scene = new Scene(camera, windowWidth, windowHeight);
         player.enableControls(scene, worldWidth, worldHeight, camera);
 
-        // List of bullet spawners
-        final List<BulletSpawner> bulletSpawners = new ArrayList<>();
+        // Create bullet spawners with adjusted spawn rates
+        BulletSpawner spawner1 = new BulletSpawner(1);  // Spawn every 1 second
+        BulletSpawner spawner2 = new BulletSpawner(1);  // Spawn every 1 second
 
-        // Add multiple bullet spawners
-        BulletSpawner spawner1 = new BulletSpawner(1.0);
-        BulletSpawner spawner2 = new BulletSpawner(0.5);
-        bulletSpawners.add(spawner1);
-        bulletSpawners.add(spawner2);
+        // Define the angles for the bullet streams
+        double[] angles1 = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
+        double[] angles2 = {-45, -135};
 
-        // Set up the spawners at different locations in the world
-        spawner1.spawnSpiral(world.getRoot(), worldWidth / 2.0, 0, 1000, 5, 10, 5,1,30);
-
-        // Animation loop
-        new AnimationTimer() {
+        // Start the game loop to update bullets
+        new javafx.animation.AnimationTimer() {
             long lastTime = System.nanoTime();
 
             @Override
             public void handle(long now) {
-                double deltaTime = (now - lastTime) / 1e9; // Calculate delta time in seconds
+                double deltaTime = (now - lastTime) / 1e9; // Convert nanoseconds to seconds
                 lastTime = now;
 
-                spawner1.update(deltaTime, world.getRoot());
-                spawner2.update(deltaTime, world.getRoot());
+                // Update the spawners (move the bullets and remove expired ones)
+                spawner1.update(deltaTime, camera, worldWidth / 2, 0, 5, 10, 100, 0, angles1, 5);
+                spawner2.update(deltaTime, camera, worldWidth / 2, worldHeight, 5, 10, 100, 0, angles2, 5);
             }
         }.start();
 

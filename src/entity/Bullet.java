@@ -1,69 +1,70 @@
 package entity;
 
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 /**
- * Represents a bullet that is fired in the game.
+ * Represents a bullet in the game with a position, speed, and size.
  */
-public class Bullet {
+public class Bullet extends Circle {
 
-    private final Circle shape;
-    private final double speedX;
-    private final double speedY;
-    private final double duration; // Duration the bullet is active (in seconds)
-    private double age; // Time elapsed since the bullet was created (in seconds)
+    private final Circle bullet;
+    private double angle;
+    private double speed;
+    private double size;
+    private double lifespan; // Duration the bullet will exist (in seconds)
+    private double age = 0;  // Time passed since the bullet was created
 
     /**
-     * Creates a new bullet.
-     *
-     * @param x        Initial X position of the bullet.
-     * @param y        Initial Y position of the bullet.
-     * @param speedX   Horizontal velocity of the bullet.
-     * @param speedY   Vertical velocity of the bullet.
-     * @param radius   Radius of the bullet.
-     * @param damage   Damage the bullet deals.
-     * @param duration Lifetime of the bullet in seconds.
+     * Constructs a Bullet with given parameters.
+     * @param x the x-coordinate of the bullet
+     * @param y the y-coordinate of the bullet
+     * @param angle the angle at which the bullet is fired (in degrees)
+     * @param speed the speed of the bullet
+     * @param size the size of the bullet
+     * @param lifespan the lifespan of the bullet (in seconds)
      */
-    public Bullet(double x, double y, double speedX, double speedY, int radius, int damage, double duration) {
-        this.shape = new Circle(radius, Color.RED);
-        this.shape.setCenterX(x);
-        this.shape.setCenterY(y);
-        this.speedX = speedX;
-        this.speedY = speedY;
-        this.duration = duration;
-        this.age = 0; // Initialize bullet age to 0
+    public Bullet(double x, double y, double angle, double speed, double size, double lifespan) {
+        this.angle = angle;
+        this.speed = speed;
+        this.size = size;
+        this.lifespan = lifespan;
+
+        // Initialize the bullet (using a Circle for simplicity)
+        this.bullet = new Circle(x, y, size);
+        this.bullet.setFill(Color.RED); // Set bullet color to red
     }
 
     /**
-     * Moves the bullet based on its velocity.
-     *
-     * @param deltaTime Time elapsed since the last update (in seconds).
+     * Updates the position of the bullet based on its speed and angle, and checks if it should despawn.
+     * @param deltaTime the time delta since the last update
+     * @param camera the camera (pane) that holds the bullets
      */
-    public void move(double deltaTime) {
+    public void updatePosition(double deltaTime, Pane camera) {
+        // Update position based on speed and angle
+        double radians = Math.toRadians(angle);
+        double dx = Math.cos(radians) * speed * deltaTime;
+        double dy = Math.sin(radians) * speed * deltaTime;
+
         // Update the bullet's position
-        this.shape.setCenterX(this.shape.getCenterX() + speedX * deltaTime);
-        this.shape.setCenterY(this.shape.getCenterY() + speedY * deltaTime);
+        bullet.setCenterX(bullet.getCenterX() + dx);
+        bullet.setCenterY(bullet.getCenterY() + dy);
 
         // Update the bullet's age
         age += deltaTime;
+
+        // If the bullet has exceeded its lifespan, remove it from the pane
+        if (age >= lifespan) {
+            camera.getChildren().remove(bullet);
+        }
     }
 
     /**
-     * Checks if the bullet has expired based on its duration.
-     *
-     * @return True if the bullet's lifetime has exceeded its duration, false otherwise.
+     * Gets the Circle object representing the bullet.
+     * @return the Circle representing the bullet
      */
-    public boolean hasExpired() {
-        return age >= duration;
-    }
-
-    /**
-     * Gets the visual representation of the bullet.
-     *
-     * @return The Circle representing the bullet.
-     */
-    public Circle getShape() {
-        return this.shape;
+    public Circle getBullet() {
+        return bullet;
     }
 }
