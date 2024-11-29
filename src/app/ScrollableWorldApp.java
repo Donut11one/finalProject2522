@@ -13,31 +13,36 @@ import world.World;
  * Main application entry point for the Scrollable World App.
  */
 public final class ScrollableWorldApp extends Application {
-
+    final static int WORLD_WIDTH = 600;
+    final static int WORLD_HEIGHT = 800;
+    final static int WINDOW_WIDTH = 800;
+    final static int WINDOW_HEIGHT = 600;
     @Override
     public void start(final Stage primaryStage) {
-        final int worldWidth = 800;
-        final int worldHeight = 1000;
-        final int windowWidth = 800;
-        final int windowHeight = 600;
+
 
         // Create the world
-        final World world = new World(worldWidth, worldHeight);
-
+        final World world;
         // Create the player
-        final Player player = new Player(50, 50);
-        world.addEntity(player.getPlayer());
-
+        final Player player;
         // Create a camera (root Pane containing the world)
-        final Pane camera = new Pane(world.getRoot());
-
+        final Pane camera;
         // Create the scene
-        final Scene scene = new Scene(camera, windowWidth, windowHeight);
-        player.enableControls(scene, worldWidth, worldHeight, camera);
+        final Scene scene;
+
+        world = new World(WORLD_WIDTH, WORLD_HEIGHT);
+        player = new Player(50, 50);
+        world.addEntity(player.getPlayer());
+        camera = new Pane(world.getRoot());
+
+        scene = new Scene(camera, WINDOW_WIDTH, WINDOW_HEIGHT);
+        player.enableControls(scene, WORLD_WIDTH, WORLD_HEIGHT, camera);
 
         // Create bullet spawners with adjusted spawn rates
-        BulletSpawner spawner1 = new BulletSpawner(1);  // Spawn every 1 second
-        BulletSpawner spawner2 = new BulletSpawner(1);  // Spawn every 1 second
+        BulletSpawner spawner1;
+        BulletSpawner spawner2;
+        spawner1 = new BulletSpawner(0.5);  // Spawn every 1 second
+        spawner2= new BulletSpawner(1);  // Spawn every 1 second
 
         // Define the angles for the bullet streams
         double[] angles1 = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
@@ -53,8 +58,8 @@ public final class ScrollableWorldApp extends Application {
                 lastTime = now;
 
                 // Update the spawners (move the bullets and remove expired ones)
-                spawner1.update(deltaTime, camera, worldWidth / 2, 0, 5, 10, 100, 0, angles1, 5);
-                spawner2.update(deltaTime, camera, worldWidth / 2, worldHeight, 5, 10, 100, 0, angles2, 5);
+                spawner1.update(deltaTime, camera, WORLD_WIDTH / 2, 0, 5, 10, 100, 0, angles1, 10);
+                spawner2.update(deltaTime, camera, WORLD_WIDTH / 2, WORLD_HEIGHT, 5, 10, 100, 0, angles2, 5);
             }
         }.start();
 
