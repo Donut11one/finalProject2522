@@ -1,128 +1,203 @@
 package NumberGame;
 
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
-/**
- * NumberGame is a simple game where the user guesses a randomly generated number.
- */
-public final class NumberGame 
-{
-    private static final int MAX_ATTEMPTS = 5;
-    private static final int MAX_NUMBER = 100;
-    private int gamesPlayed;
-    private int successfulGames;
-    private int totalAttempts;
+public final class NumberGame{
 
-    /**
-     * Main method to run the NumberGame.
-     *
-     * @param args Command-line arguments (not used).
-     */
-    public static void main(final String[] args) 
-    {
-        NumberGame game = new NumberGame();
-        game.play();
+    private static NumberGame instance;
+    private Stage primaryStage;
+
+    private static final int GRID_ROWS = 4;
+    private static final int GRID_COLUMNS = 5;
+    private static final int TOTAL_NUMBERS = 20;
+
+    private final Button[][] gridButtons = new Button[GRID_ROWS][GRID_COLUMNS];
+    private final List<Integer> randomNumbers = new ArrayList<>();
+    private int currentIndex = 0;
+
+    private final Label nextNumberLabel = new Label();
+    private int lastPlacedNumber = -1;
+
+    private int gamesPlayed = 0;
+    private int gamesWon = 0;
+    private int totalSuccessfulPlacements = 0;
+
+    private Button quitButton; // Quit button to remain visible even when the game is over
+
+    // Get the singleton instance of NumberGame
+    public static NumberGame getInstance() {
+        return instance;
     }
 
-    /**
-     * Plays the NumberGame.
-     */
-    public void play() 
-    {
-        final Scanner scanner = new Scanner(System.in);
-        boolean playAgain;
+    public void showGame(final Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        instance = this; // Set instance after Application has started
 
-        do 
-        {
-            playRound(scanner);
-            System.out.println("Do you want to play again? (Yes/No): ");
-            final String response = scanner.nextLine().trim().toLowerCase();
-            playAgain = response.equals("yes");
-        } 
-        while (playAgain);
+        // Initialize random numbers
+        generateRandomNumbers();
 
-        saveScore();
+        // Create GUI components
+        GridPane gridPane = createGrid();
+        VBox mainLayout = new VBox(10, nextNumberLabel, gridPane); // Include quit button in layout
+        nextNumberLabel.setText("Next number: " + randomNumbers.get(currentIndex));
+
+        // Set up the stage
+        Scene scene = new Scene(mainLayout, 400, 500);
+        primaryStage.setTitle("NumberGame");
+        
+        primaryStage.setScene(scene);
+        primaryStage.show(); // Show the stage when JavaFX is ready
     }
 
-    /**
-     * Plays a single round of the NumberGame.
-     *
-     * @param scanner the Scanner for user input.
-     */
-    private void playRound(final Scanner scanner) 
-    {
-        final Random random = new Random();
-        final int targetNumber = random.nextInt(MAX_NUMBER) + 1;
+    public void quitGame() {
+        if (primaryStage != null) {
+            primaryStage.hide();
+            primaryStage.setScene(null);
+        }
+    }    
 
-        System.out.println("Guess the number (between 1 and " + MAX_NUMBER + "):");
-        int attempts = 0;
-        boolean guessedCorrectly = false;
 
-        while (attempts < MAX_ATTEMPTS) 
-        {
-            attempts++;
-            totalAttempts++;
-            System.out.print("Attempt " + attempts + ": ");
-            final int guess = scanner.nextInt();
+    private void generateRandomNumbers() {
+        Random random = new Random();
+        randomNumbers.clear();
+        for (int i = 0; i < TOTAL_NUMBERS; i++) {
+            randomNumbers.add(random.nextInt(1000) + 1);
+        }
+    }
 
-            if (guess == targetNumber) 
-            {
-                System.out.println("Congratulations! You've guessed the number!");
-                guessedCorrectly = true;
-                break;
-            } 
-            else if (guess < targetNumber) 
-            {
-                System.out.println("Too low! Try again.");
-            } 
-            else 
-            {
-                System.out.println("Too high! Try again.");
+    private GridPane createGrid() {
+        GridPane gridPane = new GridPane();
+
+        for (int row = 0; row < GRID_ROWS; row++) {
+            for (int col = 0; col < GRID_COLUMNS; col++) {
+                Button button = new Button("[]");
+                button.setPrefSize(60, 60);
+
+                int finalRow = row;
+                int finalCol = col;
+
+                // Handle button click
+                button.setOnAction(event -> handleButtonClick(finalRow, finalCol, button));
+
+                gridButtons[row][col] = button;
+                gridPane.add(button, col, row);
+            }
+        }
+        return gridPane;
+    }
+
+    private void handleButtonClick(int row, int col, Button button) {
+        if (!button.getText().equals("[]")) {
+            return;
+        }
+
+        int currentNumber = randomNumbers.get(currentIndex);
+
+        if (currentNumber < lastPlacedNumber) {
+            showGameOver(false);
+            return;
+        }
+
+        button.setText(String.valueOf(currentNumber));
+        lastPlacedNumber = currentNumber;
+        currentIndex++;
+        totalSuccessfulPlacements++;
+
+        if (currentIndex >= TOTAL_NUMBERS) {
+            showGameOver(true);
+            return;
+        }
+
+        if (!hasEmptySpace()) {
+            showGameOver(false);
+            return;
+        }
+
+        nextNumberLabel.setText("Next number: " + randomNumbers.get(currentIndex));
+    }
+
+    private boolean hasEmptySpace() {
+        for (int row = 0; row < GRID_ROWS; row++) {
+            for (int col = 0; col < GRID_COLUMNS; col++) {
+                if (gridButtons[row][col].getText().equals("[]")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void showGameOver(boolean won) {
+        gamesPlayed++;
+        if (won) {
+            gamesWon++;
+        }
+
+        // Create the Game Over popup with VBox layout
+        VBox gameOverLayout = new VBox(10);
+        
+        Label gameOverLabel = new Label(won ? "Congratulations!" : "Game Over");
+        gameOverLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        Label scoreSummaryLabel = new Label(getScoreSummary());
+        
+        Button playAgainButton = new Button("Play Again");
+        playAgainButton.setOnAction(event -> resetGame());
+        
+        // Quit button functionality
+        quitButton = new Button("Quit");
+        quitButton.setOnAction(event -> quitGame());
+
+        gameOverLayout.getChildren().addAll(gameOverLabel, scoreSummaryLabel, playAgainButton, quitButton);
+
+        // Create the new scene with the VBox containing the game over content
+        Scene gameOverScene = new Scene(gameOverLayout, 400, 300);
+
+        // Hide current game and show game over scene
+        primaryStage.setScene(gameOverScene);
+        primaryStage.show();
+    }
+
+    private void resetGame() {
+        // Reset game state
+        for (int row = 0; row < GRID_ROWS; row++) {
+            for (int col = 0; col < GRID_COLUMNS; col++) {
+                gridButtons[row][col].setText("[]");
             }
         }
 
-        if (!guessedCorrectly) 
-        {
-            System.out.println("Sorry, you've used all your attempts. The correct number was " + targetNumber + ".");
-        } 
-        else 
-        {
-            successfulGames++;
-        }
+        currentIndex = 0;
+        lastPlacedNumber = -1;
+        generateRandomNumbers();
+        nextNumberLabel.setText("Next number: " + randomNumbers.get(currentIndex));
 
-        gamesPlayed++;
+        // Switch back to the game screen
+        VBox gameLayout = new VBox(10, nextNumberLabel, createGrid());
+        Scene gameScene = new Scene(gameLayout, 400, 500);
+        primaryStage.setScene(gameScene);
+        primaryStage.show();
     }
 
-    /**
-     * Saves the game score to a file.
-     */
-    private void saveScore() 
-    {
-        final LocalDateTime currentTime = LocalDateTime.now();
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        final String formattedDateTime = currentTime.format(formatter);
+    private String getScoreSummary() {
+        int gamesLost = gamesPlayed - gamesWon;
+        double averagePlacements = (double) totalSuccessfulPlacements / gamesPlayed;
 
-        final String scoreData = formattedDateTime + " | " +
-                                 gamesPlayed + " games played | " +
-                                 successfulGames + " successful games | " +
-                                 totalAttempts + " total attempts";
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("NumberGame/score.txt", true))) 
-        {
-            writer.write(scoreData);
-            writer.newLine();
-        } 
-        catch (IOException e) 
-        {
-            System.err.println("Error saving score: " + e.getMessage());
-        }
-
-        System.out.println("Your score has been saved!");
+        return "Games played: " + gamesPlayed +
+               "\nGames won: " + gamesWon +
+               "\nGames lost: " + gamesLost +
+               "\nTotal placements: " + totalSuccessfulPlacements +
+               "\nAverage placements per game: " + String.format("%.2f", averagePlacements);
+    }
+    public void setInstance(NumberGame instance) {
+        NumberGame.instance = instance;
     }
 }

@@ -17,9 +17,11 @@ public final class ScrollableWorldApp extends Application {
     final static int WORLD_HEIGHT = 800;
     final static int WINDOW_WIDTH = 800;
     final static int WINDOW_HEIGHT = 600;
+    private Stage primaryStage;
     @Override
     public void start(final Stage primaryStage) {
 
+        this.primaryStage = primaryStage;
 
         // Create the world
         final World world;
@@ -66,10 +68,8 @@ public final class ScrollableWorldApp extends Application {
         // Set up the primary stage
         primaryStage.setTitle("Scrollable World App");
         primaryStage.setScene(scene);
-        primaryStage.show();
     }
-
-    public static void main(String[] args) {
-        launch(args);
+    public void showGame() {
+        primaryStage.show();
     }
 }
