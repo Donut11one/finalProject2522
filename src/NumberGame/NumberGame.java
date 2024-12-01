@@ -53,14 +53,19 @@ public final class NumberGame{
         // Set up the stage
         Scene scene = new Scene(mainLayout, 400, 500);
         primaryStage.setTitle("NumberGame");
-        
+
         primaryStage.setScene(scene);
-        primaryStage.show(); // Show the stage when JavaFX is ready
+        // Ensure the stage is shown
+        if (!primaryStage.isShowing()) {
+            primaryStage.show(); // Show the stage
+        }
     }
 
     public void quitGame() {
         if (primaryStage != null) {
+            System.out.println("PrimaryStage visibility after show: " + primaryStage.isShowing());
             primaryStage.hide();
+            System.out.println("PrimaryStage visibility after show: " + primaryStage.isShowing());
             primaryStage.setScene(null);
         }
     }    
@@ -76,7 +81,6 @@ public final class NumberGame{
 
     private GridPane createGrid() {
         GridPane gridPane = new GridPane();
-
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLUMNS; col++) {
                 Button button = new Button("[]");

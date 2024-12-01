@@ -31,14 +31,15 @@ public final class GameLauncher extends Application {
      * Show the Number Game window.
      */
     public static void showNumberGame() {
-        // Recreate a new stage if needed
-        System.out.println(primaryStage);
-        if (primaryStage == null) {
-            primaryStage = new Stage();
-        }
-        Platform.runLater(() -> numberGame.showGame(primaryStage));
-        System.out.println("PrimaryStage visibility after show: " + primaryStage.isShowing());
+        // Ensure primaryStage is valid and visible before trying to show the game
+        if (primaryStage != null) {
+            if (!primaryStage.isShowing()) {
+                Thread test = new Thread(()->numberGame.showGame(primaryStage));
+                test.setDaemon(true);
 
+            //    Platform.runLater(() -> numberGame.showGame(primaryStage));  // Make sure showGame runs
+            }
+        }
     }
 
     /**
